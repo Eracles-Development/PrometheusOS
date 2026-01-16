@@ -16,6 +16,13 @@
   # Abre el puerto de Cockpit (9090) en el firewall automáticamente
   services.cockpit.openFirewall = true;
 
+  # Permitir acceso HTTP sin encriptar (soluciona problemas de TLS en red local segura)
+  services.cockpit.settings = {
+    WebService = {
+      AllowUnencrypted = true;
+    };
+  };
+
   ###### Paquetes (Cockpit + plugin de máquinas + herramientas) ######
   environment.systemPackages = with pkgs; [
     cockpit
