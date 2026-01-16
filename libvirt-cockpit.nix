@@ -19,7 +19,6 @@
   ###### Paquetes (Cockpit + plugin de máquinas + herramientas) ######
   environment.systemPackages = with pkgs; [
     cockpit
-    cockpit-machines
     qemu
     libvirt
     virt-manager  # opcional (GUI local). Puedes borrarlo si no lo quieres.
