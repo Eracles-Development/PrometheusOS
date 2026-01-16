@@ -26,9 +26,7 @@
   ];
 
   ###### Permisos de usuario ######
-  # Cambia "tuUsuario" por tu usuario real en NixOS.
-  # IMPORTANTE: ese usuario debe existir en tu configuración.
-  users.users.tuUsuario.extraGroups = [ "libvirtd" "kvm" ];
+  users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
   ###### Red/firewall (si no usas openFirewall) ######
   # Si prefieres controlar el firewall a mano, comenta openFirewall y usa esto:
