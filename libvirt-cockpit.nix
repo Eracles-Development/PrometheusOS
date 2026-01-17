@@ -26,8 +26,7 @@
 
   # 3. Paquetes necesarios
   environment.systemPackages = [
-    # CAMBIO AQUÍ: En NixOS Unstable se encuentra dentro de cockpitPackages
-    pkgs.cockpit-machines
+    pkgs.cockpitPackages.cockpit-machines
     pkgs.virt-manager
     pkgs.libvirt
     pkgs.packagekit
