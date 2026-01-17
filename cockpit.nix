@@ -44,7 +44,8 @@
 
   # Paquetes del sistema para virtualización y Cockpit
   environment.systemPackages = with pkgs; [
-    cockpit-machines
+    cockpitPlugins.machines
+    cockpitPlugins.pcp
     qemu
     libvirt
     virt-manager 
