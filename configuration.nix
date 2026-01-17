@@ -12,6 +12,7 @@
      git
   ];
 
+  networking.firewall.enable = false;
 
   # Bootloader (Asegúrate de que esto coincide con tu servidor)
   boot.loader.systemd-boot.enable = true;
