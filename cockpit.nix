@@ -82,9 +82,22 @@ in
     extraGroups = [ "libvirtd" ]; # Necesita acceso al socket de libvirt
   };
 
-  # Registrar el servicio DBus y Systemd de libvirt-dbus (CRUCIAL para que funcione)
+  # Registrar el servicio DBus (Systemd lo definimos manualmente abajo para asegurar que lo encuentre)
   services.dbus.packages = [ libvirt-dbus ];
-  systemd.packages = [ libvirt-dbus ];
+  # systemd.packages = [ libvirt-dbus ]; # Falló al encontrar la unidad, usaremos definición manual
+
+  # Definición manual del servicio para asegurar que existe y apunta al binario correcto
+  systemd.services.libvirt-dbus = {
+    description = "Libvirt D-Bus bridge";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "dbus";
+      BusName = "org.libvirt";
+      ExecStart = "${libvirt-dbus}/sbin/libvirt-dbus";
+      User = "libvirtdbus";
+      Group = "libvirtdbus";
+    };
+  };
 
   # Paquetes del sistema para virtualización y Cockpit
   environment.systemPackages = with pkgs; [
