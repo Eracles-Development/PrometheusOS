@@ -8,8 +8,8 @@ let
 
     src = pkgs.fetchzip {
       url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
-      # Si el hash falla, cámbialo por lib.fakeSha256 y copia el que te pida Nix
-      sha256 = "sha256-Hc3M4JB+RHzABIKRQtvD4SyErh4CbY2ZV69lLerZDvw="; 
+      # REEMPLAZA ESTA LÍNEA CON EL NUEVO HASH:
+      sha256 = "sha256-x16eynAUoOqAw4FbbXus3+jus/HEnxFfXvyHkki5d2A="; 
     };
 
     nativeBuildInputs = [ pkgs.gettext ];
