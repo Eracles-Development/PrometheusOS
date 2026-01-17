@@ -26,7 +26,7 @@
 
   # 3. Paquetes necesarios
   environment.systemPackages = [
-    pkgs.cockpitPackages.cockpit-machines
+    pkgs.cockpit-machines
     pkgs.virt-manager
     pkgs.libvirt
     pkgs.packagekit
