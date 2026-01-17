@@ -6,6 +6,13 @@
     ./libvirt-cockpit.nix 
   ];
 
+  environment.systemPackages = with pkgs; [
+     vim
+     wget
+     git
+  ];
+
+
   # Bootloader (Asegúrate de que esto coincide con tu servidor)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -22,6 +29,5 @@
   # Configuración del sistema
   nixpkgs.config.allowUnfree = true;
   
-  # Como estás en la versión 25.05 (unstable), mantén este valor
   system.stateVersion = "24.11"; 
 }
