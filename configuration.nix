@@ -7,6 +7,7 @@
     [
       ./hardware-configuration.nix
       ./libvirt-virt-manager.nix
+      ./cockpit.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
