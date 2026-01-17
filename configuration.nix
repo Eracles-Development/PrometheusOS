@@ -3,7 +3,7 @@
 {
   imports = [ 
     ./hardware-configuration.nix
-    ./libvirt-cockpit.nix 
+    ./cockpit.nix
   ];
 
   environment.systemPackages = with pkgs; [
@@ -26,11 +26,14 @@
   # Usuario
   users.users.eracles = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "libvirtd" "networkmanager" ];
+    extraGroups = [ "wheel" "libvirtd" "networkmanager" "kvm" ];
   };
 
   # Configuración del sistema
   nixpkgs.config.allowUnfree = true;
   
-  system.stateVersion = "23.11"; 
+  # Deshabilitar systemd-oomd para evitar incompatibilidades
+  systemd.services.systemd-oomd.enable = false;
+  
+  system.stateVersion = "24.11"; 
 }

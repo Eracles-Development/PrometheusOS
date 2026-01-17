@@ -5,10 +5,15 @@
   services.cockpit = {
     enable = true;
     port = 9090;
+    package = pkgs.cockpit.override {
+      packageOverrides = {
+        cockpit-machines = pkgs.cockpit-machines;
+      };
+    };
     settings = {
       WebService = {
         # Permitir acceso desde la red local
-        Origins = lib.mkForce "https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090
+        Origins = lib.mkForce "https://192.168.8.123:9090 http://192.168.8.123:9090 localhost:9090
         ";
       };
     };
