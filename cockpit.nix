@@ -73,6 +73,10 @@ in
   # Permisos de usuario (Ajusta 'eracles' si tu usuario es diferente, o muévelo a configuration.nix si prefieres)
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
+  # Registrar el servicio DBus y Systemd de libvirt-dbus (CRUCIAL para que funcione)
+  services.dbus.packages = [ libvirt-dbus ];
+  systemd.packages = [ libvirt-dbus ];
+
   # Paquetes del sistema para virtualización y Cockpit
   environment.systemPackages = with pkgs; [
     cockpit-machines # Paquete definido arriba
