@@ -6,29 +6,27 @@
     enable = true;
     qemu = {
       package = pkgs.qemu_kvm;
-      runAsRoot = true;
-      swtpm.enable = true;       # Para soporte TPM (necesario para Windows 11)
-      ovmf.enable = true;        # Para soporte UEFI
-      ovmf.packages = [ pkgs.OVMFFull.fd ];  # Imágenes OVMF completas
+      runAsRoot = true;  # ¡Ya está definido aquí!
+      swtpm.enable = true;
+      ovmf.enable = true;
+      ovmf.packages = [ pkgs.OVMFFull.fd ];
     };
-    onBoot = "ignore";           # No iniciar VMs al arrancar el host
-    onShutdown = "shutdown";     # Apagar VMs al apagar el host
-    extraOptions = [
-      "--verbose"
-    ];
+    onBoot = "ignore";
+    onShutdown = "shutdown";
+    extraOptions = [ "--verbose" ];
   };
 
   # Habilitar Cockpit con el módulo de máquinas virtuales
   services.cockpit = {
     enable = true;
     port = 9090;
-    openFirewall = true;  # Abre automáticamente el puerto 9090
+    openFirewall = true;
     package = pkgs.cockpit.override {
       extraPackages = with pkgs; [
-        cockpit-machines    # Para gestión de VMs
-        cockpit-podman      # Para gestión de contenedores (opcional)
-        cockpit-networkmanager  # Para gestión de red
-        cockpit-storaged    # Para gestión de almacenamiento
+        cockpit-machines
+        cockpit-podman
+        cockpit-networkmanager
+        cockpit-storaged
       ];
     };
     settings = {
@@ -49,7 +47,7 @@
     "libvirtd"
     "kvm" 
     "qemu-libvirtd"
-    "disk"  # Para acceso a discos
+    "disk"
   ];
 
   # Polkit rules para permitir gestión de VMs sin contraseña
@@ -68,7 +66,6 @@
 
   # Paquetes específicos para virtualización
   environment.systemPackages = with pkgs; [
-    # Herramientas de virtualización
     virt-manager
     virt-viewer
     virt-install
@@ -77,16 +74,10 @@
     qemu-utils
     ovmf
     swtpm
-    
-    # Herramientas de red para VMs
     bridge-utils
     dnsmasq
     iptables
-    
-    # Herramientas de Cockpit
     cockpit-client
-    
-    # Herramientas de almacenamiento
     gparted
     ntfs3g
   ];
@@ -105,14 +96,14 @@
     };
   };
 
-  # Habilitar anfitrión QEMU
-  virtualisation.libvirtd.qemu.runAsRoot = true;
+  # ¡ELIMINADO! Ya está definido arriba:
+  # virtualisation.libvirtd.qemu.runAsRoot = true;
 
-  # Soporte para passthrough de GPU (opcional)
+  # Soporte para passthrough de GPU (opcional - comenta si no necesitas)
   boot.kernelParams = [
     "intel_iommu=on"
     "iommu=pt"
-    "vfio-pci.ids=10de:1c03,10de:10f1"  # Ejemplo para NVIDIA GPU
+    # "vfio-pci.ids=10de:1c03,10de:10f1"  # Ejemplo para NVIDIA GPU - descomenta si necesitas
   ];
 
   # Configuración de cgroups v2 para compatibilidad
