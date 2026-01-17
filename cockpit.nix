@@ -66,7 +66,7 @@ in
     cockpit-machines # Paquete definido arriba
     qemu
     libvirt
-    libvirt-dbus
+    libvirt_dbus
     virt-manager 
     xorg.xauth
   ];
