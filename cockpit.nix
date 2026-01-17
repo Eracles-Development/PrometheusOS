@@ -6,7 +6,7 @@ let
     version = "346";
     src = pkgs.fetchzip {
       url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
-      sha256 = "c9d80357da2bf3ecda9698f0dc6fcb46675b3b76da9150a22178071fe982fcb0";
+      sha256 = "sha256-Hc3M4JB+RHzABIKRQtvD4SyErh4CbY2ZV69lLerZDvw=";
     };
     buildPhase = ":"; 
     installPhase = ''
