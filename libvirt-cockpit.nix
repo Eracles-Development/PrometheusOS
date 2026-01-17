@@ -25,6 +25,21 @@
     virt-manager
   ];
 
+  # Limpiar certificados corruptos antes de que Cockpit inicie
+  systemd.services.cockpit-cleanup-certs = {
+    description = "Clean corrupted Cockpit certificates";
+    before = [ "cockpit.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      rm -rf /etc/cockpit/ws-certs.d/*
+      mkdir -p /etc/cockpit/ws-certs.d
+    '';
+  };
+
   ###### Permisos de usuario ######
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
