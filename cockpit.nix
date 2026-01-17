@@ -25,6 +25,25 @@ let
     nativeBuildInputs = with pkgs; [ pkg-config meson ninja python3Packages.docutils ];
     buildInputs = with pkgs; [ glib libvirt libvirt-glib ];
   };
+
+  libvirt-dbus-policy = pkgs.writeTextFile {
+    name = "org.libvirt.conf";
+    destination = "/share/dbus-1/system.d/org.libvirt.conf";
+    text = ''
+      <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+       "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+      <busconfig>
+        <policy user="libvirtdbus">
+          <allow own="org.libvirt"/>
+          <allow send_destination="org.libvirt"/>
+          <allow receive_sender="org.libvirt"/>
+        </policy>
+        <policy context="default">
+          <allow send_destination="org.libvirt"/>
+        </policy>
+      </busconfig>
+    '';
+  };
 in
 {
   # Habilitar servicio Cockpit
@@ -82,26 +101,7 @@ in
     extraGroups = [ "libvirtd" ]; # Necesita acceso al socket de libvirt
   };
 
-  # Política D-Bus explícita para nuestro usuario custom 'libvirtdbus'
-  # Separada en un paquete para que services.dbus.packages la cargue sin conflictos
-  libvirt-dbus-policy = pkgs.writeTextFile {
-    name = "org.libvirt.conf";
-    destination = "/share/dbus-1/system.d/org.libvirt.conf";
-    text = ''
-      <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-       "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-      <busconfig>
-        <policy user="libvirtdbus">
-          <allow own="org.libvirt"/>
-          <allow send_destination="org.libvirt"/>
-          <allow receive_sender="org.libvirt"/>
-        </policy>
-        <policy context="default">
-          <allow send_destination="org.libvirt"/>
-        </policy>
-      </busconfig>
-    '';
-  };
+
 
   # Registrar el servicio DBus
   services.dbus.packages = [ libvirt-dbus libvirt-dbus-policy ]; # Cargamos el binario Y la política manual
