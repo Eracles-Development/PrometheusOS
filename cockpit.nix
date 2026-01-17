@@ -22,7 +22,7 @@ let
       url = "https://gitlab.com/libvirt/libvirt-dbus/-/archive/v${version}/libvirt-dbus-v${version}.tar.gz";
       sha256 = "sha256-S4QktQmcnTte4XsIcgc5dkA8LjMJaOD2lljS01WT0dk="; 
     };
-    nativeBuildInputs = with pkgs; [ pkg-config meson ninja ];
+    nativeBuildInputs = with pkgs; [ pkg-config meson ninja python3Packages.docutils ];
     buildInputs = with pkgs; [ glib libvirt libvirt-glib ];
   };
 in
