@@ -19,7 +19,7 @@ let
     pname = "libvirt-dbus";
     version = "1.4.1";
     src = pkgs.fetchzip {
-      url = "https://ftp.libvirt.org/libvirt/dbus/libvirt-dbus-${version}.tar.xz";
+      url = "https://gitlab.com/libvirt/libvirt-dbus/-/archive/v${version}/libvirt-dbus-v${version}.tar.gz";
       sha256 = "sha256-d7yJmN+vGvKqQwbQvlTGR4Wl0/gCC3wKk1PzGvQk0Xg="; 
     };
     nativeBuildInputs = with pkgs; [ pkg-config meson ninja ];
