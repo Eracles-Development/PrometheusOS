@@ -1,6 +1,22 @@
 { config, pkgs, lib, ... }:
 
 {
+let
+  cockpit-machines = pkgs.stdenv.mkDerivation rec {
+    pname = "cockpit-machines";
+    version = "346";
+    src = pkgs.fetchzip {
+      url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
+      sha256 = "c9d80357da2bf3ecda9698f0dc6fcb46675b3b76da9150a22178071fe982fcb0";
+    };
+    buildPhase = ":"; 
+    installPhase = ''
+      mkdir -p $out/share/cockpit/machines
+      cp -r * $out/share/cockpit/machines/
+    '';
+  };
+in
+{
   # Habilitar servicio Cockpit
   services.cockpit = {
     enable = true;
@@ -8,14 +24,18 @@
     settings = {
       WebService = {
         # Permitir acceso desde la red local
-        Origins = lib.mkForce "https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090
-        ";
+        # Permitir acceso desde la red local y hostname
+        Origins = lib.mkForce ''https://eracles1:9090 https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090 https://192.168.8.122:9090 http://192.168.8.122:9090 https://192.168.8.123:9090 http://192.168.8.123:9090'';
       };
+      ProtocolHeader = "X-Forwarded-Proto";
     };
   };
 
   # Abrir puerto en el firewall
   networking.firewall.allowedTCPPorts = [ 9090 ];
+
+  # Polkit necesario para acciones privilegiadas sin root directo
+  security.polkit.enable = true;
 
   # Virtualización (libvirt + QEMU/KVM)
   virtualisation.libvirtd = {
@@ -44,7 +64,7 @@
 
   # Paquetes del sistema para virtualización y Cockpit
   environment.systemPackages = with pkgs; [
-    # cockpit-machines # Comentado temporalmente por error 'undefined variable'
+    cockpit-machines # Paquete definido arriba
     qemu
     libvirt
     virt-manager 
