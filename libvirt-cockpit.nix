@@ -17,6 +17,7 @@
 
   # 2. Configuración de Virtualización (Libvirt)
   virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd.qemu.runAsRoot = true;
   
   # 3. Paquetes necesarios
   environment.systemPackages = with pkgs; [
@@ -26,13 +27,29 @@
     virt-manager
     libvirt
     openssl
+    pcp
   ];
 
   # 4. Permisos y Firewall
   security.polkit.enable = true;
   networking.firewall.allowedTCPPorts = [ 9090 ];
 
-  # 5. PCP (Performance Co-Pilot) para métricas históricas
-  services.pmcd.enable = true;
-  services.pmlogger.enable = true;
+  # 5. Histórico de métricas con pmlogger
+  systemd.services.pmlogger = {
+    description = "PCP Performance Metric Logger";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "forking";
+      ExecStart = "${pkgs.pcp}/bin/pmlogger -N -l /var/log/pcp/pmlogger/pmlogger.log /var/log/pcp/pmlogger/pmlogger";
+      Restart = "on-failure";
+    };
+  };
+
+  # Crear directorios necesarios para PCP
+  systemd.tmpfiles.rules = [
+    "d /var/log/pcp/pmlogger 0755 root root -"
+  ];
+
+  ###### Permisos de usuario ######
+  users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 }
