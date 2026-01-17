@@ -12,8 +12,7 @@
      git
   ];
 
-
-  # Bootloader (Asegúrate de que esto coincide con tu servidor)
+  # Bootloader (Asegúrate de que esto coincida con tu servidor)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
