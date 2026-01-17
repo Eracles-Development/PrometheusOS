@@ -25,8 +25,10 @@
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
   # Configuración de los sockets de libvirt para que el usuario pueda conectar sin sudo
-  virtualisation.libvirtd.unixSocket.group = "libvirtd";
-  virtualisation.libvirtd.unixSocket.chmod = "0660";
+  virtualisation.libvirtd.extraConfig = ''
+    unix_sock_group = "libvirtd"
+    unix_sock_rw_perms = "0770"
+  '';
 
   ###### Arranque automático de libvirtd ######
   systemd.services.libvirtd.wantedBy = [ "multi-user.target" ];
