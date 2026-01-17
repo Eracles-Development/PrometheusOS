@@ -3,7 +3,7 @@
 {
   imports = [ 
     ./hardware-configuration.nix
-    ./cockpit.nix
+    ./libvirt-cockpit.nix 
   ];
 
   environment.systemPackages = with pkgs; [
