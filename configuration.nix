@@ -1,25 +1,25 @@
 { config, pkgs, ... }:
 
 {
-  # 1. Habilitar el servicio de Cockpit
+  # Habilitar Cockpit
   services.cockpit = {
     enable = true;
-    port = 9090; # Puerto por defecto
+    port = 9090;
     settings = {
       WebService = {
-        # Esto permite conexiones si estás usando una IP directamente
-        AllowUnencrypted = true; 
-        # Opcional: Si quieres evitar problemas estrictos de certificados en local
-        ProtocolHeader = "X-Forwarded-Proto";
+        # Permite que la negociación TLS sea más flexible
+        AllowUnencrypted = true;
       };
     };
   };
 
-  # 2. Abrir los puertos necesarios en el Firewall
-  # Cockpit usa el puerto 9090 por defecto, NO el 443.
+  # Abrir el puerto en el firewall
   networking.firewall.allowedTCPPorts = [ 9090 ];
 
-  # 3. (Opcional) Asegurarte de tener herramientas de red instaladas
+  # IMPORTANTE: Cockpit a veces necesita polkit para funcionar correctamente
+  security.polkit.enable = true;
+
+  # Opcional: Asegúrate de tener instalados los paquetes base
   environment.systemPackages = with pkgs; [
     cockpit
   ];
