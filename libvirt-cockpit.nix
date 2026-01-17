@@ -7,9 +7,10 @@
     port = 9090;
     settings = {
       WebService = {
-        # mkForce es obligatorio para evitar el conflicto con el default
-        Origins = lib.mkForce "https://192.168.8.122:9090";
-        AllowUnencrypted = true;
+        # Permitimos la IP y el nombre de host para evitar el rechazo de conexión
+        # Si quieres ser menos estricto mientras pruebas, puedes comentar la línea de Origins
+        Origins = lib.mkForce "https://192.168.8.122:9090 https://eracles1:9090";
+        ProtocolHeader = "X-Forwarded-Proto";
       };
     };
   };
@@ -17,10 +18,9 @@
   # 2. Configuración de Virtualización (Libvirt)
   virtualisation.libvirtd.enable = true;
   
-  # 3. Paquetes necesarios (Cambiado para evitar errores de variable)
+  # 3. Paquetes necesarios
   environment.systemPackages = [
-    pkgs.cockpit
-    pkgs.cockpit-machines  # Referencia directa al paquete
+    # pkgs.cockpit-machines  # Si sigue fallando, coméntalo para poder entrar al menos al dashboard base
     pkgs.virt-manager
     pkgs.libvirt
   ];
