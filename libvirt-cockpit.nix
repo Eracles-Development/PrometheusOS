@@ -69,11 +69,4 @@
 
   ###### Arranque automático de libvirtd ######
   systemd.services.libvirtd.wantedBy = [ "multi-user.target" ];
-
-  ###### Configuración de Cockpit ######
-  services.cockpit.settings = lib.mkForce {
-    WebService = {
-      Origins = "https://localhost:9090";
-    };
-  };
 }
