@@ -73,6 +73,15 @@ in
   # Permisos de usuario (Ajusta 'eracles' si tu usuario es diferente, o muévelo a configuration.nix si prefieres)
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
+  # CREAR USUARIO Y GRUPO para libvirt-dbus (el servicio lo necesita para arrancar)
+  users.groups.libvirtdbus = {};
+  users.users.libvirtdbus = {
+    isSystemUser = true;
+    group = "libvirtdbus";
+    description = "Libvirt D-Bus bridge";
+    extraGroups = [ "libvirtd" ]; # Necesita acceso al socket de libvirt
+  };
+
   # Registrar el servicio DBus y Systemd de libvirt-dbus (CRUCIAL para que funcione)
   services.dbus.packages = [ libvirt-dbus ];
   systemd.packages = [ libvirt-dbus ];
