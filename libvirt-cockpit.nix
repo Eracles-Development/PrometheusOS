@@ -41,11 +41,11 @@
           -subj "/CN=nixos" \
           -keyout "$CERT_FILE" \
           -out "$CERT_FILE"
-        chmod 640 "$CERT_FILE"
-        # Ajustamos permisos para que cockpit-ws pueda leerlo
-        # (El grupo suele ser 'cockpit-ws' o 'root' dependiendo de la config, 
-        #  pero chmod 640 y root:cockpit-ws debería bastar si el grupo existe)
-        chown root:cockpit-ws "$CERT_FILE" || chown root:root "$CERT_FILE"
+        chmod 644 "$CERT_FILE"
+        chown root:root "$CERT_FILE"
+        echo "Certificado generado exitosamente en $CERT_FILE"
+      else
+        echo "Certificado ya existe en $CERT_FILE"
       fi
     '';
     serviceConfig = {
