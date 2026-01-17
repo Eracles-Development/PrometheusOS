@@ -12,7 +12,7 @@
      git
   ];
 
-  # Bootloader (Asegúrate de que esto coincida con tu servidor)
+  # Bootloader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -28,5 +28,5 @@
   # Configuración del sistema
   nixpkgs.config.allowUnfree = true;
   
-  system.stateVersion = "24.11"; 
+  system.stateVersion = "23.11"; 
 }
