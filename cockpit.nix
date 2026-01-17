@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   # Habilitar servicio Cockpit
@@ -8,7 +8,7 @@
     settings = {
       WebService = {
         # Permitir acceso desde la red local
-        Origins = "https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090";
+        Origins = lib.mkForce "https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090";
       };
     };
   };
