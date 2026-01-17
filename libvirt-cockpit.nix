@@ -81,25 +81,7 @@
     gparted
     ntfs3g
   ];
-
-  # Configurar red para libvirt (bridge por defecto)
-  virtualisation.libvirtd.networks = {
-    default = {
-      address = "192.168.122.0/24";
-      dhcp = {
-        start = "192.168.122.2";
-        end = "192.168.122.254";
-      };
-      domain = "local";
-      enable = true;
-      localOnly = true;
-    };
-  };
-
-  # ¡ELIMINADO! Ya está definido arriba:
-  # virtualisation.libvirtd.qemu.runAsRoot = true;
-
-  # Soporte para passthrough de GPU (opcional - comenta si no necesitas)
+ # Soporte para passthrough de GPU (opcional - comenta si no necesitas)
   boot.kernelParams = [
     "intel_iommu=on"
     "iommu=pt"
