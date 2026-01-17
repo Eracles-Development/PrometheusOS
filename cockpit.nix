@@ -1,6 +1,5 @@
 { config, pkgs, lib, ... }:
 
-{
 let
   cockpit-machines = pkgs.stdenv.mkDerivation rec {
     pname = "cockpit-machines";
