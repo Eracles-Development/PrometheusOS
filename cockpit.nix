@@ -23,7 +23,7 @@ let
       sha256 = "sha256-S4QktQmcnTte4XsIcgc5dkA8LjMJaOD2lljS01WT0dk="; 
     };
     nativeBuildInputs = with pkgs; [ pkg-config meson ninja ];
-    buildInputs = with pkgs; [ glib libvirt ];
+    buildInputs = with pkgs; [ glib libvirt libvirt-glib ];
   };
 in
 {
