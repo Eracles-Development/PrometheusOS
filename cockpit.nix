@@ -43,8 +43,12 @@ in
       runAsRoot = true;
       package = pkgs.qemu_kvm;
       swtpm.enable = true;
-      ovmf.enable = true;
+      # ovmf.enable = true; # Eliminado por estar obsoleto en 25.05
     };
+    
+    # Habilitar integración DBus para Cockpit
+    dbus.enable = true;
+
     # Configuración de los sockets de libvirt para que el usuario pueda conectar sin sudo
     extraConfig = ''
       unix_sock_group = "libvirtd"
@@ -66,7 +70,7 @@ in
     cockpit-machines # Paquete definido arriba
     qemu
     libvirt
-    pkgs.libvirt-dbus
+    # pkgs.libvirt-dbus # Se habilita vía virtualisation.libvirtd.dbus.enable
     virt-manager 
     xorg.xauth
   ];
