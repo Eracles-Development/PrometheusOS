@@ -1,46 +1,53 @@
 { config, pkgs, lib, ... }:
 
+let
+  # Definimos el paquete manualmente usando el link de GitHub
+  cockpit-machines-manual = pkgs.stdenv.mkDerivation rec {
+    pname = "cockpit-machines";
+    version = "331"; # Coincide con tu versión de Cockpit
+
+    src = pkgs.fetchzip {
+      url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
+      # Si el hash falla, cámbialo por lib.fakeSha256 y copia el que te pida Nix
+      sha256 = "sha256-Hc3M4JB+RHzABIKRQtvD4SyErh4CbY2ZV69lLerZDvw="; 
+    };
+
+    nativeBuildInputs = [ pkgs.gettext ];
+
+    installPhase = ''
+      mkdir -p $out/share/cockpit/machines
+      cp -r * $out/share/cockpit/machines
+    '';
+  };
+in
 {
-  # Habilitar servicio Cockpit
+  # 1. Habilitar Cockpit y añadir el paquete manual
   services.cockpit = {
     enable = true;
     port = 9090;
-    
-    # Esta es la forma más limpia y robusta para 24.11
-    # Combinamos el paquete base con el plugin de máquinas
     package = pkgs.cockpit.overrideAttrs (oldAttrs: {
       passthru = (oldAttrs.passthru or {}) // {
-        # Esto le dice a Cockpit dónde buscar módulos extra
-        extraPackages = [ pkgs.cockpit-machines ];
+        extraPackages = [ cockpit-machines-manual ];
       };
     });
-
     settings = {
       WebService = {
+        # Asegúrate de que esto sea una sola línea sin saltos extraños
         Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090 http://localhost:9090";
       };
     };
   };
 
-  # Virtualización y Libvirtd
-  virtualisation.libvirtd = {
-    enable = true;
-    qemu = {
-      runAsRoot = true;
-      package = pkgs.qemu_kvm;
-      swtpm.enable = true;
-      ovmf.enable = true;
-    };
-  };
+  # 2. Virtualización (Necesaria para que las máquinas funcionen)
+  virtualisation.libvirtd.enable = true;
   
-  # Aseguramos que el usuario tenga los permisos necesarios
-  users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
-
-  # Añadimos los paquetes necesarios al sistema
+  # 3. Paquetes de apoyo
   environment.systemPackages = with pkgs; [
-    cockpit-machines # Lo intentamos añadir aquí también para asegurar visibilidad
-    qemu
+    cockpit-machines-manual
+    virt-manager
     libvirt
-    virt-manager 
   ];
+
+  # 4. Permisos para tu usuario
+  users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 }
