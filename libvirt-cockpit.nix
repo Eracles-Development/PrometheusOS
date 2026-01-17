@@ -25,37 +25,24 @@
     virt-manager
   ];
 
-  # Permitir acceso HTTP como fallback (imprescindible si falla TLS/HTTPS)
+  # Permitir acceso HTTP sin restricciones para evitar problemas de certificados
   services.cockpit.settings = {
     WebService = {
       AllowUnencrypted = true;
     };
   };
 
-  # Servicio para generar automáticamente un certificado autofirmado si no existe
-  systemd.services.create-cockpit-cert = {
-    description = "Generate generic self-signed certificate for Cockpit";
+  # LIMPIEZA: Eliminamos el certificado manual que causaba errores.
+  # Cockpit generará uno temporal en memoria si es necesario, pero usaremos HTTP.
+  systemd.services.clean-cockpit-cert = {
+    description = "Remove problematic custom certificate";
     wantedBy = [ "multi-user.target" ];
     before = [ "cockpit.service" ];
-    path = [ pkgs.openssl ];
     script = ''
-      mkdir -p /etc/cockpit/ws-certs.d
-      CERT_FILE=/etc/cockpit/ws-certs.d/01-self-signed.cert
-      
-      if [ ! -f "$CERT_FILE" ]; then
-        echo "Generando certificado autofirmado para Cockpit..."
-        openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 \
-          -subj "/CN=nixos" \
-          -keyout "$CERT_FILE" \
-          -out "$CERT_FILE"
-        # Permisos más abiertos para asegurar lectura (644) y ownership
-        chmod 644 "$CERT_FILE"
-        chown root:cockpit-ws "$CERT_FILE" || chown root:root "$CERT_FILE"
-      fi
+      rm -f /etc/cockpit/ws-certs.d/01-self-signed.cert
     '';
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = true;
     };
   };
 
