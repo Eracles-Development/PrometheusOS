@@ -15,7 +15,7 @@
     qemu
     libvirt
     virt-manager  # GUI necesaria para X11 Forwarding
-    xauth         # Requerido para X11 Forwarding
+    xorg.xauth    # Requerido para X11 Forwarding
   ];
 
   ###### Permisos de usuario ######

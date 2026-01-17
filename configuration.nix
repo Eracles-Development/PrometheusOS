@@ -10,7 +10,7 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      ./libvirt-cockpit.nix
+      ./libvirt-virt-manager.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
