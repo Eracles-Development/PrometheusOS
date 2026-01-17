@@ -26,24 +26,7 @@ let
     buildInputs = with pkgs; [ glib libvirt libvirt-glib ];
   };
 
-  libvirt-dbus-policy = pkgs.writeTextFile {
-    name = "org.libvirt.conf";
-    destination = "/share/dbus-1/system.d/org.libvirt.conf";
-    text = ''
-      <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-       "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-      <busconfig>
-        <policy user="libvirtdbus">
-          <allow own="org.libvirt"/>
-          <allow send_destination="org.libvirt"/>
-          <allow receive_sender="org.libvirt"/>
-        </policy>
-        <policy context="default">
-          <allow send_destination="org.libvirt"/>
-        </policy>
-      </busconfig>
-    '';
-  };
+
 in
 {
   # Habilitar servicio Cockpit
@@ -104,7 +87,7 @@ in
 
 
   # Registrar el servicio DBus
-  services.dbus.packages = [ libvirt-dbus libvirt-dbus-policy ]; # Cargamos el binario Y la política manual
+  services.dbus.packages = [ libvirt-dbus ]; # El paquete ahora incluye la política correcta
 
   # Definición manual del servicio para asegurar que existe y apunta al binario correcto
   systemd.services.libvirt-dbus = {
