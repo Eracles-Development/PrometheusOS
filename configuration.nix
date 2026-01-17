@@ -93,6 +93,7 @@
        X11Forwarding = true;
      };
    };
+   programs.ssh.setXAuthLocation = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
