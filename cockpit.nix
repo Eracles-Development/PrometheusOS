@@ -25,8 +25,8 @@ in
         # Permitir acceso desde la red local
         # Permitir acceso desde la red local y hostname
         Origins = lib.mkForce ''https://eracles1:9090 https://192.168.8.121:9090 http://192.168.8.121:9090 localhost:9090 https://192.168.8.122:9090 http://192.168.8.122:9090 https://192.168.8.123:9090 http://192.168.8.123:9090'';
+        ProtocolHeader = "X-Forwarded-Proto";
       };
-      ProtocolHeader = "X-Forwarded-Proto";
     };
   };
 
