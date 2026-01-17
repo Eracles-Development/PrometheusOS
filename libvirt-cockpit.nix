@@ -33,19 +33,22 @@
     path = [ pkgs.openssl ];
     script = ''
       mkdir -p /etc/cockpit/ws-certs.d
-      CERT_FILE=/etc/cockpit/ws-certs.d/01-self-signed.cert
+      CERT_FILE=/etc/cockpit/ws-certs.d/01-self-signed.crt
+      KEY_FILE=/etc/cockpit/ws-certs.d/01-self-signed.key
       
-      if [ ! -f "$CERT_FILE" ]; then
+      if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
         echo "Generando certificado autofirmado para Cockpit..."
         openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 \
           -subj "/CN=nixos" \
-          -keyout "$CERT_FILE" \
+          -keyout "$KEY_FILE" \
           -out "$CERT_FILE"
         chmod 644 "$CERT_FILE"
+        chmod 600 "$KEY_FILE"
         chown root:root "$CERT_FILE"
-        echo "Certificado generado exitosamente en $CERT_FILE"
+        chown root:root "$KEY_FILE"
+        echo "Certificado y clave generados exitosamente"
       else
-        echo "Certificado ya existe en $CERT_FILE"
+        echo "Certificado y clave ya existen"
       fi
     '';
     serviceConfig = {
