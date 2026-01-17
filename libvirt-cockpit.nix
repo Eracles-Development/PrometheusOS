@@ -25,6 +25,13 @@
     virt-manager
   ];
 
+  # Permitir acceso HTTP como fallback (imprescindible si falla TLS/HTTPS)
+  services.cockpit.settings = {
+    WebService = {
+      AllowUnencrypted = true;
+    };
+  };
+
   # Servicio para generar automáticamente un certificado autofirmado si no existe
   systemd.services.create-cockpit-cert = {
     description = "Generate generic self-signed certificate for Cockpit";
@@ -41,10 +48,8 @@
           -subj "/CN=nixos" \
           -keyout "$CERT_FILE" \
           -out "$CERT_FILE"
-        chmod 640 "$CERT_FILE"
-        # Ajustamos permisos para que cockpit-ws pueda leerlo
-        # (El grupo suele ser 'cockpit-ws' o 'root' dependiendo de la config, 
-        #  pero chmod 640 y root:cockpit-ws debería bastar si el grupo existe)
+        # Permisos más abiertos para asegurar lectura (644) y ownership
+        chmod 644 "$CERT_FILE"
         chown root:cockpit-ws "$CERT_FILE" || chown root:root "$CERT_FILE"
       fi
     '';
