@@ -83,22 +83,9 @@ in
   };
 
   # Registrar el servicio DBus
-  # services.dbus.packages = [ libvirt-dbus ]; # El paquete no parece instalar bien el conf, lo haremos manual
+  services.dbus.packages = [ libvirt-dbus ]; # El paquete contiene la política, la usaremos
   
-  # Política D-Bus MANUAL para permitir que el usuario libvirtdbus tome el nombre org.libvirt
-  environment.etc."dbus-1/system.d/org.libvirt.conf".text = ''
-    <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
-     "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-    <busconfig>
-      <policy user="libvirtdbus">
-        <allow own="org.libvirt"/>
-        <allow send_destination="org.libvirt"/>
-      </policy>
-      <policy context="default">
-        <allow send_destination="org.libvirt"/>
-      </policy>
-    </busconfig>
-  '';
+  # systemd.packages = [ libvirt-dbus ]; # Falló al encontrar la unidad, usaremos definición manual
 
   # Definición manual del servicio para asegurar que existe y apunta al binario correcto
   systemd.services.libvirt-dbus = {
