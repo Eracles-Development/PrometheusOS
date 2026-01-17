@@ -18,10 +18,16 @@
     xorg.xauth    # Requerido para X11 Forwarding
   ];
 
+  # Necesario para que virt-manager guarde su configuración
+  programs.dconf.enable = true;
+
   ###### Permisos de usuario ######
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
+  # Configuración de los sockets de libvirt para que el usuario pueda conectar sin sudo
+  virtualisation.libvirtd.unixSocket.group = "libvirtd";
+  virtualisation.libvirtd.unixSocket.chmod = "0660";
+
   ###### Arranque automático de libvirtd ######
-  # Normalmente NixOS lo hace al habilitar libvirtd, pero lo dejamos explícito:
   systemd.services.libvirtd.wantedBy = [ "multi-user.target" ];
 }
