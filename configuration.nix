@@ -1,26 +1,24 @@
 { config, pkgs, ... }:
 
 {
-  # Habilitar Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
     settings = {
       WebService = {
-        # Permite que la negociación TLS sea más flexible
+        # Permite conexiones desde tu IP específica
+        # Debes incluir tanto el protocolo como el puerto
+        Origins = "https://192.168.8.122:9090";
+        
+        # Esto ayuda a evitar problemas con los protocolos de handshake
         AllowUnencrypted = true;
       };
     };
   };
 
-  # Abrir el puerto en el firewall
-  networking.firewall.allowedTCPPorts = [ 9090 ];
-
-  # IMPORTANTE: Cockpit a veces necesita polkit para funcionar correctamente
+  # Importante: Asegúrate de que polkit esté activo
   security.polkit.enable = true;
 
-  # Opcional: Asegúrate de tener instalados los paquetes base
-  environment.systemPackages = with pkgs; [
-    cockpit
-  ];
+  # Abrir puerto
+  networking.firewall.allowedTCPPorts = [ 9090 ];
 }
