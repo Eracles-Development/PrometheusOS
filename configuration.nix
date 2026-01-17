@@ -6,7 +6,6 @@
   imports =
     [
       ./hardware-configuration.nix
-      ./libvirt-virt-manager.nix
       ./cockpit.nix
     ];
 
@@ -16,7 +15,7 @@
 
    users.users.eracles = {
      isNormalUser = true;
-     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" ]; 
      initialPassword = "eracles";
      packages = with pkgs; [
        tree
