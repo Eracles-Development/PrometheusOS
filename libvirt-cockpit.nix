@@ -25,41 +25,6 @@
     virt-manager
   ];
 
-  # Servicio para generar automáticamente un certificado autofirmado si no existe
-  systemd.services.create-cockpit-cert = {
-    description = "Generate generic self-signed certificate for Cockpit";
-    wantedBy = [ "multi-user.target" ];
-    before = [ "cockpit.service" ];
-    path = [ pkgs.openssl ];
-    script = ''
-      mkdir -p /etc/cockpit/ws-certs.d
-      
-      # Limpiar certificados antiguos/problemáticos
-      rm -f /etc/cockpit/ws-certs.d/01-self-signed.cert
-      rm -f /etc/cockpit/ws-certs.d/01-self-signed.crt
-      rm -f /etc/cockpit/ws-certs.d/01-self-signed.key
-      
-      CERT_FILE=/etc/cockpit/ws-certs.d/01-self-signed.crt
-      KEY_FILE=/etc/cockpit/ws-certs.d/01-self-signed.key
-      
-      echo "Generando certificado autofirmado para Cockpit..."
-      openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 \
-        -subj "/CN=nixos" \
-        -keyout "$KEY_FILE" \
-        -out "$CERT_FILE"
-      
-      chmod 644 "$CERT_FILE"
-      chmod 600 "$KEY_FILE"
-      chown root:root "$CERT_FILE" "$KEY_FILE"
-      
-      echo "Certificado y clave generados exitosamente"
-    '';
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-  };
-
   ###### Permisos de usuario ######
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 
