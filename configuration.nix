@@ -12,6 +12,9 @@
      git
   ];
 
+  networking.firewall.enable = false;
+  networking.firewall.allowedTCPPorts = [ 22 ];
+  services.openssh.enable = true;
 
   # Bootloader (Asegúrate de que esto coincide con tu servidor)
   boot.loader.systemd-boot.enable = true;
