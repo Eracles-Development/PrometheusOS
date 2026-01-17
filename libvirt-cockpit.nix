@@ -1,93 +1,43 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-  # Habilitar libvirt para virtualización
-  virtualisation.libvirtd = {
-    enable = true;
-    qemu = {
-      package = pkgs.qemu_kvm;
-      runAsRoot = true;  # ¡Ya está definido aquí!
-      swtpm.enable = true;
-      ovmf.enable = true;
-      ovmf.packages = [ pkgs.OVMFFull.fd ];
-    };
-    onBoot = "ignore";
-    onShutdown = "shutdown";
-    extraOptions = [ "--verbose" ];
-  };
-
-  # Habilitar Cockpit con el módulo de máquinas virtuales
+  # 1. Configuración de Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
-    openFirewall = true;
-    package = pkgs.cockpit.override {
-      extraPackages = with pkgs; [
-        cockpit-machines
-        cockpit-podman
-        cockpit-networkmanager
-        cockpit-storaged
-      ];
-    };
     settings = {
       WebService = {
-        Origins = "https://eracles1:9090 http://localhost:9090 http://eracles1:9090";
+        Origins = lib.mkForce "https://eracles1:9090 https://127.0.0.1:9090 https://192.168.8.121:9090 https://192.168.8.122:9090 https://192.168.8.123:9090";
         ProtocolHeader = "X-Forwarded-Proto";
-        AllowUnencrypted = false;
       };
     };
   };
 
-  # Añadir los grupos necesarios
-  users.groups.libvirtd = {};
-  users.groups.kvm = {};
+  # 2. Configuración de Virtualización
+  virtualisation.libvirtd.enable = true;
 
-  # Añadir el usuario eracles a los grupos de virtualización
-  users.users.eracles.extraGroups = [
-    "libvirtd"
-    "kvm" 
-    "qemu-libvirtd"
-    "disk"
-  ];
-
-  # Polkit rules para permitir gestión de VMs sin contraseña
-  security.polkit = {
-    enable = true;
-    extraConfig = ''
-      polkit.addRule(function(action, subject) {
-        if ((action.id == "org.libvirt.unix.manage" ||
-             action.id == "org.libvirt.unix.monitor") &&
-            subject.isInGroup("libvirtd")) {
-          return polkit.Result.YES;
-        }
-      });
-    '';
-  };
-
-  # Paquetes específicos para virtualización
+  # 3. Paquetes con "Red de Seguridad"
   environment.systemPackages = with pkgs; [
     virt-manager
-    virt-viewer
-    virt-install
     libvirt
-    qemu_kvm
-    qemu-utils
-    ovmf
-    swtpm
-    bridge-utils
-    dnsmasq
-    iptables
-    cockpit-client
-    gparted
-    ntfs3g
-  ];
- # Soporte para passthrough de GPU (opcional - comenta si no necesitas)
-  boot.kernelParams = [
-    "intel_iommu=on"
-    "iommu=pt"
-    # "vfio-pci.ids=10de:1c03,10de:10f1"  # Ejemplo para NVIDIA GPU - descomenta si necesitas
-  ];
+    packagekit
+  ] 
+  # Esta línea intenta instalar cockpit-machines solo si el sistema lo encuentra
+  ++ (if pkgs ? cockpit-machines then [ pkgs.cockpit-machines ] else [ ])
+  # Por si acaso ha cambiado de lugar a cockpitPackages
+  ++ (if pkgs ? cockpitPackages.machines then [ pkgs.cockpitPackages.machines ] else [ ]);
 
-  # Configuración de cgroups v2 para compatibilidad
-  systemd.enableUnifiedCgroupHierarchy = true;
+  # 4. Permisos de administración
+  security.polkit.enable = true;
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, user) {
+        if (action.id == "org.libvirt.unix.manage" &&
+            user.isInGroup("wheel")) {
+            return polkit.Result.YES;
+        }
+    });
+  '';
+
+  programs.dconf.enable = true;
+  networking.firewall.allowedTCPPorts = [ 9090 ];
 }

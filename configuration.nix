@@ -3,55 +3,40 @@
 {
   imports = [ 
     ./hardware-configuration.nix
-    ./libvirt-cockpit.nix
+    ./libvirt-cockpit.nix 
   ];
 
-  # Bootloader
+  # Bootloader: Configuración estándar para servidores modernos (UEFI)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Red
   networking.hostName = "eracles1"; 
   networking.networkmanager.enable = true;
 
-  # Configuración de firewall general
-  networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [ 22 9090 ];
-
-  # Usuario principal
+  # Configuración de Usuario
   users.users.eracles = {
     isNormalUser = true;
-    description = "Eracles";
-    extraGroups = [ 
-      "wheel" 
-      "networkmanager"
-      "dialout" 
-      "audio"
-    ];
+    description = "Administrador del Sistema";
+    # 'wheel' para sudo, 'libvirtd' y 'kvm' para gestionar máquinas virtuales
+    extraGroups = [ "wheel" "libvirtd" "kvm" "networkmanager" ];
   };
 
-  # Shell por defecto
-  users.defaultUserShell = pkgs.bash;
-
-  # Paquetes básicos del sistema
+  # Paquetes base esenciales para la terminal
   environment.systemPackages = with pkgs; [
-    vim
-    wget
-    curl
-    git
+     vim
+     wget
+     git
+     htop
+     pciutils  # Útil para diagnosticar hardware en virtualización
+     usbutils  # Útil para ver dispositivos USB
   ];
 
-  # Habilitar soporte para hardware
-  boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
-
-  # Configuración de Nix
+  # Configuración del sistema
   nixpkgs.config.allowUnfree = true;
   
-  # Servicio SSH (opcional)
-  services.openssh.enable = true;
-  
-  # Zona horaria
-  time.timeZone = "America/New_York";
-  i18n.defaultLocale = "en_US.UTF-8";
-
+  # IMPORTANTE: No cambies este valor. 
+  # Aunque uses NixOS 25.05 (Unstable), stateVersion indica con qué versión 
+  # se inicializaron tus datos originales para mantener compatibilidad.
   system.stateVersion = "24.11"; 
 }
