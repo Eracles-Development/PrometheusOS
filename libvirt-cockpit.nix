@@ -3,7 +3,6 @@
 {
   imports = [ 
     ./hardware-configuration.nix
-    ./libvirt-cockpit.nix 
   ];
 
   environment.systemPackages = with pkgs; [
@@ -16,7 +15,7 @@
   networking.firewall.allowedTCPPorts = [ 22 ];
   services.openssh.enable = true;
 
-  # Bootloader (Asegúrate de que esto coincide con tu servidor)
+  # Bootloader (Asegúrate de que esto coincida con tu servidor)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
