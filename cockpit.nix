@@ -14,6 +14,17 @@ let
       cp -r * $out/share/cockpit/machines/
     '';
   };
+
+  libvirt-dbus = pkgs.stdenv.mkDerivation rec {
+    pname = "libvirt-dbus";
+    version = "1.4.1";
+    src = pkgs.fetchzip {
+      url = "https://ftp.libvirt.org/libvirt/dbus/libvirt-dbus-${version}.tar.xz";
+      sha256 = "sha256-d7yJmN+vGvKqQwbQvlTGR4Wl0/gCC3wKk1PzGvQk0Xg="; 
+    };
+    nativeBuildInputs = with pkgs; [ pkg-config meson ninja ];
+    buildInputs = with pkgs; [ glib libvirt ];
+  };
 in
 {
   # Habilitar servicio Cockpit
@@ -67,7 +78,7 @@ in
     cockpit-machines # Paquete definido arriba
     qemu
     libvirt
-    pkgs.libvirt-dbus # Necesario pasarlo con pkgs. por el nombre con guion
+    libvirt-dbus # Paquete manual definido arriba
     virt-manager 
     xorg.xauth
   ];
