@@ -1,12 +1,13 @@
 { config, pkgs, lib, ... }:
 
 let
+  # Bajamos a la versión 328 para evitar el error de asyncio/dbus de la 331
   cockpit-machines-manual = pkgs.stdenv.mkDerivation rec {
     pname = "cockpit-machines";
-    version = "331";
+    version = "328";
     src = pkgs.fetchzip {
       url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
-      sha256 = "sha256-x16eynAUoOqAw4FbbXus3+jus/HEnxFfXvyHkki5d2A="; 
+      sha256 = "sha256-kK7M9h2V5p1pLhW7WbS9qO1D/jV6Wk6Yl+f5S/GvX8U="; # Hash para v328
     };
     nativeBuildInputs = [ pkgs.gettext pkgs.findutils pkgs.gnused ];
 
@@ -19,7 +20,7 @@ let
   };
 in
 {
-  # 1. Configuración de Cockpit
+  # 1. Cockpit Service
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -28,15 +29,17 @@ in
         ln -s ${cockpit-machines-manual}/share/cockpit/machines $out/share/cockpit/machines
       '';
     });
-    settings.WebService.Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
   };
 
-  systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
+  # 2. Variable de entorno para estabilidad
+  systemd.services.cockpit.environment = {
+    COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
+    PYTHONPATH = "${pkgs.python3}/lib/python3.12/site-packages";
+  };
 
-  # 2. Virtualización Libvirtd
+  # 3. Libvirtd sin timeout y persistente
   virtualisation.libvirtd = {
     enable = true;
-    onShutdown = "shutdown"; 
     qemu = {
       package = pkgs.qemu_kvm;
       runAsRoot = true;
@@ -45,28 +48,27 @@ in
     };
   };
 
-  # 3. SOLUCIÓN AL CONFLICTO (Uso de mkForce)
   systemd.services.libvirtd = {
     wantedBy = [ "multi-user.target" ];
-    
-    # Forzamos el comando de inicio con timeout 0
-    serviceConfig.ExecStart = lib.mkForce [
-      "" 
-      "${pkgs.libvirt}/sbin/libvirtd --timeout 0"
-    ];
-
-    # Forzamos el reinicio automático para que no choque con el "no" por defecto
-    serviceConfig.Restart = lib.mkForce "always";
-    serviceConfig.RestartSec = "5s";
-    serviceConfig.ExitType = lib.mkForce "cgroup";
+    serviceConfig = {
+      ExecStart = lib.mkForce [ "" "${pkgs.libvirt}/sbin/libvirtd --timeout 0" ];
+      Restart = lib.mkForce "always";
+    };
   };
 
-  # 4. Paquetes y Usuarios
+  # 4. Reglas de Polkit para evitar el "Permission Denied" anterior
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id == "org.libvirt.unix.manage" && subject.isInGroup("libvirtd")) {
+        return polkit.Result.YES;
+      }
+    });
+  '';
+
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     virt-manager
     libvirt
-    bridge-utils
   ];
 
   users.users.eracles = {
