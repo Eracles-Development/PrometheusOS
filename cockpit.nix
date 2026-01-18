@@ -14,25 +14,26 @@ let
       mkdir -p $out/share/cockpit/machines
       SOURCE_DIR=$(find . -name manifest.json -exec dirname {} \; | head -n 1)
       cp -r $SOURCE_DIR/* $out/share/cockpit/machines/
-      # Cirugía de manifest para compatibilidad total
       sed -i '/"conditions": \[/,/ \],/d' $out/share/cockpit/machines/manifest.json
     '';
   };
 in
 {
-  # 1. Cockpit: Inyección de Paquetes Extra
+  # 1. Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
-    # Esto es vital: añadimos el plugin a la lista de paquetes que Cockpit escanea nativamente
     package = pkgs.cockpit.overrideAttrs (oldAttrs: {
       postInstall = (oldAttrs.postInstall or "") + ''
         ln -s ${cockpit-machines-manual}/share/cockpit/machines $out/share/cockpit/machines
       '';
     });
+    settings.WebService.Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
   };
 
-  # 2. Virtualización: Eliminación de Sockets Inactivos
+  systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
+
+  # 2. Virtualización
   virtualisation.libvirtd = {
     enable = true;
     onShutdown = "shutdown";
@@ -42,7 +43,6 @@ in
       swtpm.enable = true;
       ovmf.enable = true;
     };
-    # Configuración de comunicación IPC
     extraConfig = ''
       unix_sock_group = "libvirtd"
       unix_sock_rw_perms = "0770"
@@ -50,19 +50,20 @@ in
     '';
   };
 
-  # 3. Systemd: Forzar Persistencia de Estado
+  # 3. Systemd: Forzar configuración para evitar conflictos
   systemd.services.libvirtd = {
     path = [ pkgs.libvirt pkgs.qemu_kvm ];
     wantedBy = [ "multi-user.target" ];
+    
+    # Usamos lib.mkForce en todo el bloque conflictivo
     serviceConfig = {
       ExecStart = lib.mkForce [ "" "${pkgs.libvirt}/sbin/libvirtd --timeout 0" ];
-      Restart = "always";
-      RestartSec = "2s";
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "2s";
     };
   };
 
-  # 4. Seguridad: Polkit (La llave maestra)
-  # Esto soluciona el "Permission Denied" y el fallo de descriptor
+  # 4. Polkit: Autorización total
   security.polkit.enable = true;
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
@@ -74,15 +75,13 @@ in
     });
   '';
 
-  # 5. Entorno de Sistema
+  # 5. Paquetes y Usuario
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     libvirt
-    qemu_kvm
     bridge-utils
   ];
 
-  # Aseguramos que el usuario tenga herencia de grupos correcta
   users.users.eracles = {
     isNormalUser = true;
     extraGroups = [ "libvirtd" "kvm" "wheel" "libvirt" "qemu-libvirtd" ];
