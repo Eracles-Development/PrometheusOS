@@ -33,7 +33,13 @@
      enable = true;
      settings = {
        X11Forwarding = true;
+       PasswordAuthentication = true;
      };
+   };
+
+   networking.firewall = {
+     enable = true;
+     allowedTCPPorts = [ 22 ];
    };
    programs.ssh.setXAuthLocation = true;
 
