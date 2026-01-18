@@ -45,19 +45,20 @@ in
     };
   };
 
-  # 3. CORRECCIÓN DEL TIMEOUT VÍA SYSTEMD (Solución al error anterior)
-  # En lugar de extraArgs, modificamos el comando de inicio del servicio directamente
+  # 3. SOLUCIÓN AL CONFLICTO (Uso de mkForce)
   systemd.services.libvirtd = {
     wantedBy = [ "multi-user.target" ];
-    # Sobrescribimos el comando para añadir el timeout 0
-    serviceConfig.ExecStart = [
-      "" # Esto limpia el comando original de NixOS
+    
+    # Forzamos el comando de inicio con timeout 0
+    serviceConfig.ExecStart = lib.mkForce [
+      "" 
       "${pkgs.libvirt}/sbin/libvirtd --timeout 0"
     ];
-    serviceConfig = {
-      Restart = "always";
-      RestartSec = "5s";
-    };
+
+    # Forzamos el reinicio automático para que no choque con el "no" por defecto
+    serviceConfig.Restart = lib.mkForce "always";
+    serviceConfig.RestartSec = "5s";
+    serviceConfig.ExitType = lib.mkForce "cgroup";
   };
 
   # 4. Paquetes y Usuarios
