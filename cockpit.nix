@@ -1,22 +1,17 @@
 { config, pkgs, lib, ... }:
 
 let
-  # 1. Definición del paquete manual
   cockpit-machines-manual = pkgs.stdenv.mkDerivation rec {
     pname = "cockpit-machines";
     version = "331";
 
     src = pkgs.fetchzip {
       url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
-      # Este es el hash que te funcionó en el paso anterior
       sha256 = "sha256-x16eynAUoOqAw4FbbXus3+jus/HEnxFfXvyHkki5d2A="; 
     };
 
-    # Necesitamos estas utilidades para mover los archivos correctamente
     nativeBuildInputs = [ pkgs.gettext pkgs.findutils ];
 
-    # CORRECCIÓN DEFINITIVA: 
-    # Buscamos el manifest.json y movemos todo su contenido al nivel superior
     installPhase = ''
       mkdir -p $out/share/cockpit/machines
       SOURCE_DIR=$(find . -name manifest.json -exec dirname {} \; | head -n 1)
@@ -30,18 +25,15 @@ let
   };
 in
 {
-  # 2. Configuración del Servicio Cockpit
+  # 1. Configuración del Servicio Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
-    
-    # Inyectamos el paquete manual en el bridge de Cockpit
     package = pkgs.cockpit.overrideAttrs (oldAttrs: {
       passthru = (oldAttrs.passthru or {}) // {
         extraPackages = [ cockpit-machines-manual ];
       };
     });
-
     settings = {
       WebService = {
         Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
@@ -49,7 +41,11 @@ in
     };
   };
 
-  # 3. Motor de Virtualización (Libvirt)
+  # --- LA PIEZA CLAVE QUE FALTABA ---
+  systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
+  # ----------------------------------
+
+  # 2. Motor de Virtualización (Tu configuración original exacta)
   virtualisation.libvirtd = {
     enable = true;
     qemu = {
@@ -60,7 +56,7 @@ in
     };
   };
 
-  # 4. Paquetes del sistema (Sin el error de virt-install)
+  # 3. Paquetes del sistema
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     virt-manager
@@ -69,6 +65,9 @@ in
     bridge-utils
   ];
 
-  # 5. Permisos de usuario
-  users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
+  # 4. Configuración de usuario (Corregida para evitar errores de rebuild)
+  users.users.eracles = {
+    isNormalUser = true; # Obligatorio para que NixOS acepte al usuario
+    extraGroups = [ "libvirtd" "kvm" "wheel" ];
+  };
 }
