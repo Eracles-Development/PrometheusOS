@@ -19,7 +19,7 @@ let
   };
 in
 {
-  # 1. Cockpit
+  # 1. Configuración de Cockpit con override de Bridge
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -31,9 +31,7 @@ in
     settings.WebService.Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
   };
 
-  systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
-
-  # 2. Virtualización
+  # 2. Virtualización y Sockets
   virtualisation.libvirtd = {
     enable = true;
     onShutdown = "shutdown";
@@ -50,36 +48,36 @@ in
     '';
   };
 
-  # 3. Systemd: Forzar configuración para evitar conflictos
+  # 3. Forzar estabilidad en los servicios (USANDO mkForce)
   systemd.services.libvirtd = {
-    path = [ pkgs.libvirt pkgs.qemu_kvm ];
+    path = [ pkgs.libvirt pkgs.qemu_kvm pkgs.attr ];
     wantedBy = [ "multi-user.target" ];
-    
-    # Usamos lib.mkForce en todo el bloque conflictivo
     serviceConfig = {
       ExecStart = lib.mkForce [ "" "${pkgs.libvirt}/sbin/libvirtd --timeout 0" ];
       Restart = lib.mkForce "always";
-      RestartSec = lib.mkForce "2s";
+      RestartSec = lib.mkForce "5s";
     };
   };
 
-  # 4. Polkit: Autorización total
+  # 4. POLKIT: El corazón de la solución
+  # Esto evita que Cockpit se bloquee al intentar acciones administrativas
   security.polkit.enable = true;
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
-      if ((action.id == "org.libvirt.unix.manage" || 
-           action.id.indexOf("org.cockpit-project.cockpit-bridge") !== -1) &&
+      if ((action.id.indexOf("org.libvirt") !== -1 || 
+           action.id.indexOf("org.cockpit-project") !== -1) &&
           subject.isInGroup("libvirtd")) {
         return polkit.Result.YES;
       }
     });
   '';
 
-  # 5. Paquetes y Usuario
+  # 5. Paquetes y Grupos
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     libvirt
     bridge-utils
+    virt-manager
   ];
 
   users.users.eracles = {
