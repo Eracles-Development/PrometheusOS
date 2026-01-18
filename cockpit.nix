@@ -33,12 +33,10 @@ in
 
   systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
 
-  # 2. Motor de Virtualización (LA CORRECCIÓN)
+  # 2. Virtualización Libvirtd
   virtualisation.libvirtd = {
     enable = true;
     onShutdown = "shutdown"; 
-    # Forzamos timeout 0 para que no se apague solo a los 2 minutos
-    extraArgs = [ "--timeout" "0" ];
     qemu = {
       package = pkgs.qemu_kvm;
       runAsRoot = true;
@@ -47,17 +45,22 @@ in
     };
   };
 
-  # 3. Forzar persistencia del servicio en Systemd
-  # Esto hace que libvirtd sea un servicio "normal" que no depende de sockets para despertar
+  # 3. CORRECCIÓN DEL TIMEOUT VÍA SYSTEMD (Solución al error anterior)
+  # En lugar de extraArgs, modificamos el comando de inicio del servicio directamente
   systemd.services.libvirtd = {
     wantedBy = [ "multi-user.target" ];
+    # Sobrescribimos el comando para añadir el timeout 0
+    serviceConfig.ExecStart = [
+      "" # Esto limpia el comando original de NixOS
+      "${pkgs.libvirt}/sbin/libvirtd --timeout 0"
+    ];
     serviceConfig = {
-      ExitType = "cgroup";
       Restart = "always";
       RestartSec = "5s";
     };
   };
 
+  # 4. Paquetes y Usuarios
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     virt-manager
