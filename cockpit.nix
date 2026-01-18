@@ -6,19 +6,20 @@ let
     version = "328";
     src = pkgs.fetchzip {
       url = "https://github.com/cockpit-project/cockpit-machines/releases/download/${version}/cockpit-machines-${version}.tar.xz";
-      sha256 = "sha256-HlmvnWoVnN3Ju9EomlcM6j3a0MoZzqZ9OXqQxkUT4qs=";
+      sha256 = "sha256-HlmvnWoVnN3Ju9EomlcM6j3a0MoZzqZ9OXqQxkUT4qs="; 
     };
     nativeBuildInputs = [ pkgs.gettext pkgs.findutils pkgs.gnused ];
     installPhase = ''
       mkdir -p $out/share/cockpit/machines
       SOURCE_DIR=$(find . -name manifest.json -exec dirname {} \; | head -n 1)
       cp -r $SOURCE_DIR/* $out/share/cockpit/machines/
+      # Elimina condiciones que causan errores de compatibilidad en NixOS
       sed -i '/"conditions": \[/,/ \],/d' $out/share/cockpit/machines/manifest.json
     '';
   };
 in
 {
-  # 1. Habilitar Cockpit con integración del Plugin
+  # 1. Cockpit: Instalación limpia con el plugin de máquinas
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -29,57 +30,33 @@ in
     });
   };
 
-  # 2. Configuración Agresiva de Libvirtd
+  # 2. Virtualización: Habilita el demonio base
   virtualisation.libvirtd = {
     enable = true;
-    qemu = {
-      package = pkgs.qemu_kvm;
-      runAsRoot = true;
-      swtpm.enable = true;
-      ovmf.enable = true;
-    };
-    # Estos permisos en el socket evitan el "Permission Denied" en Cockpit
-    extraConfig = ''
-      unix_sock_group = "libvirtd"
-      unix_sock_rw_perms = "0770"
-      auth_unix_rw = "none"
-    '';
+    qemu.runAsRoot = true;
   };
 
-  # 3. Forzar que libvirtd NO tenga timeout (Evita que la web se desconecte)
-  systemd.services.libvirtd = {
-    path = [ pkgs.libvirt pkgs.qemu_kvm ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      # El mkForce es obligatorio aquí para ganar a la config por defecto
-      ExecStart = lib.mkForce [ "" "${pkgs.libvirt}/sbin/libvirtd --timeout 0" ];
-      Restart = lib.mkForce "always";
-      RestartSec = lib.mkForce "5s";
-    };
-  };
-
-  # 4. Polkit: La llave maestra para el acceso administrativo en la web
-  security.polkit.enable = true;
+  # 3. POLKIT: La solución al "Permission Denied" y al cierre de sesión
+  # Autoriza al grupo libvirtd a gestionar el socket de virtualización
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
-      if ((action.id.indexOf("org.libvirt") !== -1 || 
-           action.id.indexOf("org.cockpit-project") !== -1) &&
-          subject.isInGroup("libvirtd")) {
+      if (action.id == "org.libvirt.unix.manage" && subject.isInGroup("libvirtd")) {
         return polkit.Result.YES;
       }
     });
   '';
 
-  # 5. Entorno de paquetes y grupos
+  # 4. Paquetes necesarios en el sistema
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
+    virt-manager
     libvirt
     bridge-utils
-    virt-manager
   ];
 
+  # 5. Grupos de usuario: Asegura que eracles tenga acceso
   users.users.eracles = {
     isNormalUser = true;
-    extraGroups = [ "libvirtd" "kvm" "wheel" "libvirt" "qemu-libvirtd" ];
+    extraGroups = [ "libvirtd" "kvm" "wheel" "libvirt" ];
   };
 }
