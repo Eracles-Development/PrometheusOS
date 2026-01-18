@@ -9,7 +9,6 @@ let
       sha256 = "sha256-HlmvnWoVnN3Ju9EomlcM6j3a0MoZzqZ9OXqQxkUT4qs=";
     };
     nativeBuildInputs = [ pkgs.gettext pkgs.findutils pkgs.gnused ];
-
     installPhase = ''
       mkdir -p $out/share/cockpit/machines
       SOURCE_DIR=$(find . -name manifest.json -exec dirname {} \; | head -n 1)
@@ -19,7 +18,7 @@ let
   };
 in
 {
-  # 1. Configuración de Cockpit con override de Bridge
+  # 1. Habilitar Cockpit con integración del Plugin
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -28,19 +27,18 @@ in
         ln -s ${cockpit-machines-manual}/share/cockpit/machines $out/share/cockpit/machines
       '';
     });
-    settings.WebService.Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
   };
 
-  # 2. Virtualización y Sockets
+  # 2. Configuración Agresiva de Libvirtd
   virtualisation.libvirtd = {
     enable = true;
-    onShutdown = "shutdown";
     qemu = {
       package = pkgs.qemu_kvm;
       runAsRoot = true;
       swtpm.enable = true;
       ovmf.enable = true;
     };
+    # Estos permisos en el socket evitan el "Permission Denied" en Cockpit
     extraConfig = ''
       unix_sock_group = "libvirtd"
       unix_sock_rw_perms = "0770"
@@ -48,19 +46,19 @@ in
     '';
   };
 
-  # 3. Forzar estabilidad en los servicios (USANDO mkForce)
+  # 3. Forzar que libvirtd NO tenga timeout (Evita que la web se desconecte)
   systemd.services.libvirtd = {
-    path = [ pkgs.libvirt pkgs.qemu_kvm pkgs.attr ];
+    path = [ pkgs.libvirt pkgs.qemu_kvm ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
+      # El mkForce es obligatorio aquí para ganar a la config por defecto
       ExecStart = lib.mkForce [ "" "${pkgs.libvirt}/sbin/libvirtd --timeout 0" ];
       Restart = lib.mkForce "always";
       RestartSec = lib.mkForce "5s";
     };
   };
 
-  # 4. POLKIT: El corazón de la solución
-  # Esto evita que Cockpit se bloquee al intentar acciones administrativas
+  # 4. Polkit: La llave maestra para el acceso administrativo en la web
   security.polkit.enable = true;
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
@@ -72,7 +70,7 @@ in
     });
   '';
 
-  # 5. Paquetes y Grupos
+  # 5. Entorno de paquetes y grupos
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     libvirt
