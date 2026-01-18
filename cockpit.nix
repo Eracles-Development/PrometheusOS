@@ -1,7 +1,6 @@
 { config, pkgs, lib, ... }:
 
 let
-  # Definición manual desde GitHub
   cockpit-machines-manual = pkgs.stdenv.mkDerivation rec {
     pname = "cockpit-machines";
     version = "331";
@@ -20,18 +19,17 @@ let
   };
 in
 {
-  # 1. Habilitar Cockpit
+  # 1. Configuración de Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
     
-    # CORRECCIÓN AQUÍ: Forzamos la integración del paquete manual
-    package = pkgs.cockpit.override {
-      packageOverrides = {
-        # Esto le dice a NixOS que incluya nuestro paquete manual en la ruta de Cockpit
+    # Esta es la forma correcta de inyectar el paquete en el servicio
+    package = pkgs.cockpit.overrideAttrs (oldAttrs: {
+      passthru = (oldAttrs.passthru or {}) // {
         extraPackages = [ cockpit-machines-manual ];
       };
-    };
+    });
 
     settings = {
       WebService = {
@@ -40,7 +38,7 @@ in
     };
   };
 
-  # 2. Virtualización completa
+  # 2. Virtualización
   virtualisation.libvirtd = {
     enable = true;
     qemu = {
@@ -51,17 +49,15 @@ in
     };
   };
 
-  # 3. Paquetes de apoyo
-  # Añadimos virt-install porque cockpit-machines lo usa para crear las VMs
+  # 3. Paquetes del sistema (Corregidos los nombres)
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
-    virt-manager
+    virt-manager   # Este incluye virt-install internamente
     virt-viewer
-    virt-install
     libvirt
     bridge-utils
   ];
 
-  # 4. Permisos para tu usuario
+  # 4. Permisos
   users.users.eracles.extraGroups = [ "libvirtd" "kvm" ];
 }
