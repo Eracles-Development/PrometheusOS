@@ -14,14 +14,12 @@ let
       mkdir -p $out/share/cockpit/machines
       SOURCE_DIR=$(find . -name manifest.json -exec dirname {} \; | head -n 1)
       cp -r $SOURCE_DIR/* $out/share/cockpit/machines/
-      
-      # Eliminamos las condiciones de rutas fijas que no existen en NixOS
       sed -i '/"conditions": \[/,/ \],/d' $out/share/cockpit/machines/manifest.json
     '';
   };
 in
 {
-  # 1. Servicio Cockpit
+  # 1. Configuración de Cockpit
   services.cockpit = {
     enable = true;
     port = 9090;
@@ -33,13 +31,14 @@ in
     settings.WebService.Origins = "https://192.168.8.123:9090 http://192.168.8.123:9090";
   };
 
-  # Variable para que Cockpit encuentre los paquetes en el sistema
   systemd.services.cockpit.environment.COCKPIT_DATA_DIR = "/run/current-system/sw/share/cockpit";
 
-  # 2. Virtualización Libvirtd (CORRECCIÓN DE PERSISTENCIA)
+  # 2. Motor de Virtualización (LA CORRECCIÓN)
   virtualisation.libvirtd = {
     enable = true;
     onShutdown = "shutdown"; 
+    # Forzamos timeout 0 para que no se apague solo a los 2 minutos
+    extraArgs = [ "--timeout" "0" ];
     qemu = {
       package = pkgs.qemu_kvm;
       runAsRoot = true;
@@ -48,25 +47,26 @@ in
     };
   };
 
-  # Forzamos que libvirtd NO se desactive por inactividad (evita el cierre de sesión)
+  # 3. Forzar persistencia del servicio en Systemd
+  # Esto hace que libvirtd sea un servicio "normal" que no depende de sockets para despertar
   systemd.services.libvirtd = {
     wantedBy = [ "multi-user.target" ];
-    serviceConfig.ExitType = "cgroup";
+    serviceConfig = {
+      ExitType = "cgroup";
+      Restart = "always";
+      RestartSec = "5s";
+    };
   };
-  systemd.sockets.libvirtd.wantedBy = [ "sockets.target" ];
 
-  # 3. Paquetes del sistema
   environment.systemPackages = with pkgs; [
     cockpit-machines-manual
     virt-manager
-    virt-viewer
     libvirt
     bridge-utils
   ];
 
-  # 4. Usuario con todos los grupos necesarios para gestionar VMs
   users.users.eracles = {
     isNormalUser = true;
-    extraGroups = [ "libvirtd" "kvm" "wheel" "libvirt" "qemu-libvirtd" ];
+    extraGroups = [ "libvirtd" "kvm" "wheel" "libvirt" ];
   };
 }
