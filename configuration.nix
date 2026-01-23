@@ -39,8 +39,14 @@
 
   # Enable Tailscale and configure firewall
   services.tailscale.enable = true;
+  
+  # Habilitar IP Forwarding para que funcionen los contenedores/VMs
+  boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+
   networking.firewall = {
     enable = true;
+    # "checkReversePath = false" suele ser necesario para libvirt/VPNs
+    checkReversePath = false; 
     trustedInterfaces = [ "tailscale0" "virbr0" ];
     allowedUDPPorts = [ config.services.tailscale.port ];
   };
