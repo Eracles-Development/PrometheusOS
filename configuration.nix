@@ -41,7 +41,7 @@
   services.tailscale.enable = true;
   networking.firewall = {
     enable = true;
-    trustedInterfaces = [ "tailscale0" ];
+    trustedInterfaces = [ "tailscale0" "virbr0" ];
     allowedUDPPorts = [ config.services.tailscale.port ];
   };
 
