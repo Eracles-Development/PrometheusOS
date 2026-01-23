@@ -37,6 +37,14 @@
    };
    programs.ssh.setXAuthLocation = true;
 
+  # Enable Tailscale and configure firewall
+  services.tailscale.enable = true;
+  networking.firewall = {
+    enable = true;
+    trustedInterfaces = [ "tailscale0" ];
+    allowedUDPPorts = [ config.services.tailscale.port ];
+  };
+
   system.stateVersion = "25.05"; # Did you read the comment?
 
 }
